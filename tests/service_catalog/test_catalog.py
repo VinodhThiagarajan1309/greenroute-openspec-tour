@@ -28,3 +28,21 @@ def test_service_type_absent_from_the_catalog_is_quarantined():
 def test_unknown_type_resembling_an_active_one_is_not_fuzzy_matched():
     row, reason = resolve_service_type({"service_type": "mowing"}, ROWS)
     assert row is None and reason == "unknown_service_type"
+
+
+PESTICIDE = [{"row_id": "r9", "service_type": "pesticide-application",
+              "active": True, "license_required": True}]
+
+
+def test_licensed_service_with_an_unlicensed_technician_is_quarantined():
+    row, reason = resolve_service_type(
+        {"service_type": "pesticide-application"}, PESTICIDE,
+        technician={"license_status": "expired"})
+    assert row is None and reason == "unlicensed_applicator"
+
+
+def test_licensed_service_with_an_active_licence_resolves():
+    row, reason = resolve_service_type(
+        {"service_type": "pesticide-application"}, PESTICIDE,
+        technician={"license_status": "active"})
+    assert row["row_id"] == "r9" and reason is None

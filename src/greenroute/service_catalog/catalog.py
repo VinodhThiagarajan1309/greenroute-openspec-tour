@@ -20,15 +20,19 @@ def assert_one_active_row(rows, service_type):
     return active[0] if active else None
 
 
-def resolve_service_type(booking, rows):
+def resolve_service_type(booking, rows, technician=None):
     """Resolve a booking's service type, or say why it must be quarantined.
 
     Returns (resolved_row, None) or (None, quarantine_reason). Never guesses:
     an unrecognised type is quarantined rather than matched to the nearest
-    catalog entry.
+    catalog entry, and a licensed service with no licensed applicator is
+    quarantined rather than reassigned.
     """
     wanted = booking.get("service_type")
     match = assert_one_active_row(rows, wanted) if wanted else None
     if match is None:
         return None, "unknown_service_type"
+    if match.get("license_required"):
+        if not technician or technician.get("license_status") != "active":
+            return None, "unlicensed_applicator"
     return match, None
