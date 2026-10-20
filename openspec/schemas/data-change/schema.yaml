@@ -1,0 +1,73 @@
+name: data-change
+version: 1
+description: Data pipeline work - proposal → contract → specs → backfill → tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why this pipeline change, and which tables it touches
+    template: proposal.md
+    instruction: |
+      Establish WHY. Name every table read and every table written, by their
+      published names. A data change that cannot name its inputs and outputs
+      is not ready to be specified.
+      Sections: Why / What Changes / Capabilities / Tables touched / Impact.
+    requires: []
+
+  - id: contract
+    generates: contract.md
+    description: The published shape consumers may rely on
+    template: contract.md
+    instruction: |
+      Declare the contract for every table this change publishes: columns and
+      types, the grain (one row per WHAT), partitioning, nullability, and the
+      freshness guarantee. This comes BEFORE the spec on purpose - in data work
+      the shape consumers depend on is the hardest thing to change later, so it
+      is agreed first.
+      State explicitly whether this is a breaking change for existing consumers.
+    requires: [proposal]
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Behaviour deltas for the capabilities this change touches
+    template: spec.md
+    instruction: |
+      Standard OpenSpec delta rules: ## ADDED / MODIFIED / REMOVED Requirements,
+      SHALL language, every requirement carries at least one #### Scenario.
+      For data work, prefer scenarios stated as row-level outcomes: given these
+      input rows in a named window, these output rows appear or do not.
+      Late-arriving data, duplicates and nulls are not edge cases here - they
+      are the normal case. A requirement that only describes the happy path is
+      not finished.
+    requires: [proposal, contract]
+
+  - id: backfill
+    generates: backfill.md
+    description: How history is restated, and how you know it worked
+    template: backfill.md
+    instruction: |
+      No data change ships without answering what happens to history.
+      Sections:
+      - Scope: which partitions or date range are restated
+      - Method: merge key, idempotency, whether a re-run is safe
+      - Verification: the parity check that proves the backfill matched
+      - Rollback: how a bad backfill is undone
+      If no backfill is needed, say so in one line and say why - that is a
+      claim someone can challenge in review.
+    requires: [specs]
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist
+    template: tasks.md
+    instruction: |
+      Groups: 1. Contract, 2. Pipeline, 3. Backfill, 4. Verification.
+      Every task states how it is verified. Verification tasks name the check
+      that runs, not "test it".
+    requires: [specs, backfill]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Work the tasks in order. The backfill group runs last and is never marked
+    complete on the strength of a row count alone.
