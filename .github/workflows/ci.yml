@@ -1,0 +1,13 @@
+name: CI
+on: [pull_request, push]
+jobs:
+  openspec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      # Pinned: 1.14.3 added strict rules that can turn a green repo red.
+      - run: npm install -g @fission-ai/openspec@1.14.3
+      - run: openspec validate --all --strict
+      - run: openspec validate --archived
