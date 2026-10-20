@@ -1,0 +1,69 @@
+name: ui-feature
+version: 1
+description: Interface work - proposal → interaction → specs → accessibility → tasks
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Why this interface change, and who it is for
+    template: proposal.md
+    instruction: |
+      Establish WHY, in terms of what a person is trying to do and currently
+      cannot. Name the user, the job, and the moment the current interface
+      fails them. Sections: Why / What Changes / Capabilities / Impact.
+    requires: []
+
+  - id: interaction
+    generates: interaction.md
+    description: Every state the interface can be in
+    template: interaction.md
+    instruction: |
+      Enumerate the states, not the pixels. Required: default, empty, loading,
+      error, partial/degraded, and success. For each: what is shown, what the
+      person can do, and what happens next.
+      Then the transitions between them, and the keyboard path through the
+      whole flow.
+      This comes BEFORE the spec because in interface work the states ARE the
+      requirements - a spec written without enumerating them will describe the
+      happy path and nothing else.
+    requires: [proposal]
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Behaviour deltas
+    template: spec.md
+    instruction: |
+      Standard delta rules. For interface work, each state named in
+      interaction.md that a user can observe or depend on becomes a scenario.
+      Write scenarios in terms of what the person sees and can do, never in
+      terms of components, props or CSS classes - those change without the
+      behaviour changing.
+    requires: [proposal, interaction]
+
+  - id: accessibility
+    generates: accessibility.md
+    description: What this is required to do for assistive technology
+    template: accessibility.md
+    instruction: |
+      Not a checklist to tick at the end - the commitments this change makes.
+      Required: keyboard-only path through the flow, focus order and focus
+      traps, what a screen reader announces at each state change, contrast
+      for every new colour pair, and the target size for every new control.
+      Name any WCAG criterion you are knowingly not meeting, and why.
+    requires: [interaction]
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist
+    template: tasks.md
+    instruction: |
+      Groups: 1. States, 2. Behaviour, 3. Accessibility, 4. Verification.
+      Every state in interaction.md gets a task. Every commitment in
+      accessibility.md gets a task that names how it is checked.
+    requires: [specs, accessibility]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Build state by state. An accessibility task is complete when it has been
+    exercised, not when the code looks right.

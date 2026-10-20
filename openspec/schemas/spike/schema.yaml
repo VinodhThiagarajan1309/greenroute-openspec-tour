@@ -1,0 +1,58 @@
+name: spike
+version: 1
+description: Time-boxed investigation - hypothesis → experiment → findings → decision
+artifacts:
+  - id: hypothesis
+    generates: hypothesis.md
+    description: What you believe, and what would prove you wrong
+    template: hypothesis.md
+    instruction: |
+      One falsifiable statement, and the time box.
+      Required: the belief stated so it could be wrong; what result would
+      change your mind; the deadline; and what happens if the box expires with
+      no answer (the default action).
+      A spike with no stated disconfirming result is not an investigation, it
+      is a plan with extra steps.
+    requires: []
+
+  - id: experiment
+    generates: experiment.md
+    description: What you will actually run
+    template: experiment.md
+    instruction: |
+      The smallest thing that could settle the question. What you will build
+      or measure, on what data or environment, and the single number or
+      observation you are reading off it.
+      Name what you are deliberately NOT building. Spike code is thrown away;
+      say so here so nobody is surprised later.
+    requires: [hypothesis]
+
+  - id: findings
+    generates: findings.md
+    description: What actually happened, including the boring result
+    template: findings.md
+    instruction: |
+      What you observed, with numbers. Then what surprised you.
+      Record the result even when it is "no difference" - a spike that only
+      gets written up when it is interesting is a spike that teaches the team
+      to report interesting things.
+      Separate observation from interpretation.
+    requires: [experiment]
+
+  - id: decision
+    generates: decision.md
+    description: Adopt, reject, or re-spike - and who owns the next move
+    template: decision.md
+    instruction: |
+      One of: adopt / reject / re-spike with a narrower question.
+      Required: the decision, the reason in one paragraph, what it commits the
+      team to, and who owns the follow-up change.
+      If the answer is adopt, this spike produces NO spec. The follow-up change
+      does, under a schema that has one.
+    requires: [findings]
+
+apply:
+  requires: [decision]
+  tracks: decision.md
+  instruction: |
+    A spike has no implementation phase. Reaching a decision is the work.
