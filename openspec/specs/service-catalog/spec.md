@@ -24,7 +24,8 @@ The catalog SHALL define exactly one active row per billable service type.
 
 ### Requirement: Booking referencing an unknown service type: be quarantined
 
-A booking referencing an unknown service type SHALL be quarantined, not defaulted.
+A booking SHALL be quarantined when its service type is unknown, and when the service
+type requires a licensed applicator and the assigned technician holds no active licence.
 
 #### Scenario: Service type absent from the catalog
 
@@ -37,3 +38,9 @@ A booking referencing an unknown service type SHALL be quarantined, not defaulte
 - **WHEN** a booking arrives with `service_type = "mowing"` and the catalog's only active row is `mowing-standard`
 - **THEN** the row is quarantined
 - **AND** it is NOT resolved to `mowing-standard` by prefix or fuzzy match
+
+#### Scenario: Licensed service with an unlicensed technician
+
+- **WHEN** a `pesticide-application` booking is assigned to a technician whose licence is expired
+- **THEN** the row is quarantined with reason `unlicensed_applicator`
+- **AND** the booking is NOT reassigned automatically
